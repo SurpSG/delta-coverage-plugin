@@ -12,6 +12,7 @@ import com.intellij.rt.coverage.util.ProjectDataLoader
 import com.intellij.rt.coverage.util.classFinder.ClassFilter
 import com.intellij.rt.coverage.util.classFinder.ClassFinder
 import com.intellij.rt.coverage.util.classFinder.ClassPathEntry
+import io.github.surpsg.deltacoverage.diff.ClassModifications
 import io.github.surpsg.deltacoverage.diff.CodeUpdateInfo
 import io.github.surpsg.deltacoverage.diff.parse.ClassFile
 import java.io.IOException
@@ -21,15 +22,17 @@ fun getProjectData(
     sources: List<Module>,
     codeUpdateInfo: CodeUpdateInfo
 ): ProjectData {
-    var hasRawHitsReport = false
-    for (report in binaryCoverageReports) {
-        hasRawHitsReport = hasRawHitsReport or report.isRawHitsReport
-    }
+    val hasRawHitsReport: Boolean = binaryCoverageReports.any { it.isRawHitsReport }
+
     // Note that instructions collection is done only inside this method
     // to ensure that instructions count in inline methods
     // correspond to method definition, not method call
-    val projectData: ProjectData = collectCoverageInformationFromOutputs(sources, codeUpdateInfo)
-    val projectDataCopy = if (hasRawHitsReport) copyProjectData(projectData, codeUpdateInfo) else null
+    val projectData: ProjectData = collectCoverageInformationFromOutputs(sources)
+    val projectDataCopy = if (hasRawHitsReport) {
+        projectData
+    } else {
+        null
+    }
     for (report in binaryCoverageReports) {
         if (report.isRawHitsReport) {
             try {
@@ -46,13 +49,10 @@ fun getProjectData(
         projectDataCopy.applyLineMappings()
         mergeHits(projectData, projectDataCopy, codeUpdateInfo)
     }
-    return projectData
+    return copyProjectDataWithFiltering(projectData, codeUpdateInfo)
 }
 
-private fun collectCoverageInformationFromOutputs(
-    modules: List<Module>,
-    codeUpdateInfo: CodeUpdateInfo
-): ProjectData {
+private fun collectCoverageInformationFromOutputs(modules: List<Module>): ProjectData {
     val projectData = ProjectData().apply {
         setInstructionsCoverage(true)
         annotationsToIgnore = emptyList()
@@ -63,59 +63,52 @@ private fun collectCoverageInformationFromOutputs(
         true,
         true
     )
-    return copyProjectData(projectData, codeUpdateInfo)
+    return projectData
 }
 
 private fun mergeHits(dst: ProjectData, src: ProjectData, codeUpdateInfo: CodeUpdateInfo) {
     for (srcClass in src.classesCollection) {
 
-        val dstClass = dst.getClassData(srcClass.name) ?: continue
+        val dstClass: ClassData = dst.getClassData(srcClass.name) ?: continue
 
         val classFile = classFileFrom(dstClass)
-
         if (!codeUpdateInfo.isInfoExists(classFile)) {
             continue
-        } else {
-            println("Class modified: $classFile")
         }
 
         dstClass.merge(srcClass)
 
-        val lines = (dstClass.lines as? Array<LineData?>? ?: emptyArray())
+        val classModifications: ClassModifications = codeUpdateInfo.getClassModifications(classFile)
+        dstClass.filterLines(classModifications)
+    }
+}
 
-        val classModifications = codeUpdateInfo.getClassModifications(classFile)
-        for (i in 0 until lines.size) {
-            val actualLine: LineData = lines[i] ?: continue
-            if (!classModifications.isLineModified(actualLine.lineNumber)) {
-                lines[i] = null
-            } else {
-                println("$classFile is modified!!! line: ${actualLine.lineNumber}")
-            }
+private fun ClassData.filterLines(classModifications: ClassModifications) {
+    val lines: Array<LineData?> = classLines()
+    for (i in lines.indices) {
+        val actualLine: LineData = lines[i] ?: continue
+        if (!classModifications.isLineModified(actualLine.lineNumber)) {
+            lines[i] = null
         }
     }
 }
 
-private fun copyProjectData(projectData: ProjectData, codeUpdateInfo: CodeUpdateInfo): ProjectData {
+private fun ClassData.classLines(): Array<LineData?> {
+    return lines as? Array<LineData?>? ?: emptyArray()
+}
+
+private fun copyProjectDataWithFiltering(projectData: ProjectData, codeUpdateInfo: CodeUpdateInfo): ProjectData {
     val projectDataCopy = ProjectData.createProjectData(true)
     for (classData in projectData.classesCollection) {
-        val classFile = classFileFrom(classData)
+        val classFile: ClassFile = classFileFrom(classData)
 
         if (!codeUpdateInfo.isInfoExists(classFile)) {
             continue
         }
 
-
-        val classCopy = projectDataCopy.getOrCreateClassData(classData.name)
-        classCopy.source = classData.source
-        val lines = classData.lines as? Array<LineData?> ?: continue
-        val linesCopy = arrayOfNulls<LineData>(lines.size)
-        classCopy.setLines(linesCopy)
-        for (lineData in lines) {
-            if (lineData == null) continue
-            val lineCopy = LineData(lineData.lineNumber, lineData.methodSignature)
-            lineCopy.id = lineData.id
-            linesCopy[lineCopy.lineNumber] = lineCopy
-            lineCopy.fillArrays()
+        projectDataCopy.getOrCreateClassData(classData.name).apply {
+            source = classData.source
+            merge(classData)
         }
     }
     val mappings: Map<String, Array<FileMapData>> = projectData.linesMap ?: emptyMap()
@@ -134,6 +127,7 @@ private fun classFileFrom(classData: ClassData) = ClassFile(
 internal class OutputClassFinder(
     private val modules: List<Module>
 ) : ClassFinder(filter) {
+
     override fun getClassPathEntries(): Collection<ClassPathEntry> {
         val entries: MutableList<ClassPathEntry> = ArrayList()
         for (module in modules) {
