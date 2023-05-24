@@ -1,6 +1,6 @@
 package io.github.surpsg.deltacoverage.report
 
-import io.github.surpsg.deltacoverage.diff.DiffSource
+import io.github.surpsg.deltacoverage.diff.CodeUpdateInfo
 import org.jacoco.report.check.Rule
 import java.nio.file.Path
 
@@ -13,10 +13,10 @@ open class FullReport(
     }
 }
 
-class DiffReport(
+class JacocoDeltaReport(
     baseReportDir: Path,
     reports: Set<Report>,
-    val diffSource: DiffSource,
+    val codeUpdateInfo: CodeUpdateInfo,
     val violation: Violation
 ) : FullReport(baseReportDir, reports)
 

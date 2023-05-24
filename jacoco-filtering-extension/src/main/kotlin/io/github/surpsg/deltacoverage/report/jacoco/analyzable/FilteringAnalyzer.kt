@@ -1,10 +1,13 @@
-package org.jacoco.core.internal.analysis
+package io.github.surpsg.deltacoverage.report.jacoco.analyzable
 
 import io.github.surpsg.deltacoverage.diff.parse.ClassFile
 import org.jacoco.core.analysis.Analyzer
 import org.jacoco.core.analysis.IClassCoverage
 import org.jacoco.core.analysis.ICoverageVisitor
 import org.jacoco.core.data.ExecutionDataStore
+import org.jacoco.core.internal.analysis.ClassCoverageImpl
+import org.jacoco.core.internal.analysis.FilteringClassAnalyzer
+import org.jacoco.core.internal.analysis.StringPool
 import org.jacoco.core.internal.analysis.filter.IFilter
 import org.jacoco.core.internal.data.CRC64
 import org.jacoco.core.internal.flow.ClassProbesAdapter
@@ -39,13 +42,13 @@ class FilteringAnalyzer(
             return
         }
         val shouldComputeClassCoverage = SourceFileNameReader(source).readFileName()
-                ?.let { ClassFile(it, reader.className) }
-                ?.let { classFilter(it) }
-                ?: false
+            ?.let { ClassFile(it, reader.className) }
+            ?.let { classFilter(it) }
+            ?: false
         if (shouldComputeClassCoverage) {
             reader.accept(
-                    createAnalyzingVisitor(classId, reader.className),
-                    0
+                createAnalyzingVisitor(classId, reader.className),
+                0
             )
         }
     }
@@ -60,23 +63,23 @@ class FilteringAnalyzer(
         }
 
         return ClassProbesAdapter(
-                buildClassAnalyzer(
-                        ClassCoverageImpl(className, classid, noMatch),
-                        probes
-                ),
-                false
+            buildClassAnalyzer(
+                ClassCoverageImpl(className, classid, noMatch),
+                probes
+            ),
+            false
         )
     }
 
     private fun buildClassAnalyzer(
-            coverage: ClassCoverageImpl,
-            probes: BooleanArray?
+        coverage: ClassCoverageImpl,
+        probes: BooleanArray?
     ): FilteringClassAnalyzer {
         return object : FilteringClassAnalyzer(
-                coverage,
-                probes,
-                StringPool(),
-                customFilterProvider(coverage)
+            coverage,
+            probes,
+            StringPool(),
+            customFilterProvider(coverage)
         ) {
             override fun visitEnd() {
                 super.visitEnd()
@@ -92,11 +95,11 @@ class FilteringAnalyzer(
     }
 
     private data class ExecutionInfo(
-            val probes: BooleanArray?,
-            val noMatch: Boolean
+        val probes: BooleanArray?,
+        val noMatch: Boolean
     )
 
-    private class SourceFileNameReader(source: ByteArray): ClassReader(source) {
+    private class SourceFileNameReader(source: ByteArray) : ClassReader(source) {
 
         fun readFileName(): String? {
             val charBuffer = CharArray(maxStringLength)

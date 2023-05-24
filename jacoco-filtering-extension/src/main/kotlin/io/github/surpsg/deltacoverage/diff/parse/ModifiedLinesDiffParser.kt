@@ -21,6 +21,11 @@ internal class ModifiedLinesDiffParser {
                 fileNameToChangedLines[patchedFileRelativePath] = fileChangedLines
             }
         }
+
+        fileNameToChangedLines.forEach { (file, rows) ->
+            log.debug("File $file has ${rows.size} modified lines")
+        }
+
         return fileNameToChangedLines
     }
 

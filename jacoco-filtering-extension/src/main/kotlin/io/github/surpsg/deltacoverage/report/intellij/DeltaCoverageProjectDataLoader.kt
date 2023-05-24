@@ -1,9 +1,10 @@
-package io.github.surpsg.deltacoverage.incubator
+package io.github.surpsg.deltacoverage.report.intellij
 
 import com.intellij.rt.coverage.data.ClassData
 import com.intellij.rt.coverage.data.FileMapData
 import com.intellij.rt.coverage.data.LineData
 import com.intellij.rt.coverage.data.ProjectData
+import com.intellij.rt.coverage.data.instructions.ClassInstructions
 import com.intellij.rt.coverage.instrumentation.UnloadedUtil
 import com.intellij.rt.coverage.instrumentation.offline.RawReportLoader
 import com.intellij.rt.coverage.report.data.BinaryReport
@@ -41,13 +42,15 @@ fun getProjectData(
                 throw RuntimeException(e)
             }
         } else {
-            val data = ProjectDataLoader.load(report.dataFile)
-            mergeHits(projectData, data, codeUpdateInfo)
+            val data = ProjectDataLoader.load(report.dataFile).apply {
+                setInstructionsCoverage(true)
+            }
+            mergeHitsWithFiltering(projectData, data, codeUpdateInfo)
         }
     }
     if (projectDataCopy != null) {
         projectDataCopy.applyLineMappings()
-        mergeHits(projectData, projectDataCopy, codeUpdateInfo)
+        mergeHitsWithFiltering(projectData, projectDataCopy, codeUpdateInfo)
     }
     return copyProjectDataWithFiltering(projectData, codeUpdateInfo)
 }
@@ -63,10 +66,12 @@ private fun collectCoverageInformationFromOutputs(modules: List<Module>): Projec
         true,
         true
     )
-    return projectData
+    return projectData.apply {
+        setInstructionsCoverage(true)
+    }
 }
 
-private fun mergeHits(dst: ProjectData, src: ProjectData, codeUpdateInfo: CodeUpdateInfo) {
+private fun mergeHitsWithFiltering(dst: ProjectData, src: ProjectData, codeUpdateInfo: CodeUpdateInfo) {
     for (srcClass in src.classesCollection) {
 
         val dstClass: ClassData = dst.getClassData(srcClass.name) ?: continue
@@ -97,26 +102,73 @@ private fun ClassData.classLines(): Array<LineData?> {
     return lines as? Array<LineData?>? ?: emptyArray()
 }
 
-private fun copyProjectDataWithFiltering(projectData: ProjectData, codeUpdateInfo: CodeUpdateInfo): ProjectData {
-    val projectDataCopy = ProjectData.createProjectData(true)
-    for (classData in projectData.classesCollection) {
-        val classFile: ClassFile = classFileFrom(classData)
-
-        if (!codeUpdateInfo.isInfoExists(classFile)) {
-            continue
-        }
-
-        projectDataCopy.getOrCreateClassData(classData.name).apply {
-            source = classData.source
-            merge(classData)
-        }
+private fun copyProjectDataWithFiltering(sourceProjectData: ProjectData, codeUpdateInfo: CodeUpdateInfo): ProjectData {
+    val projectDataCopy = ProjectData.createProjectData(true).apply {
+        setInstructionsCoverage(true)
     }
-    val mappings: Map<String, Array<FileMapData>> = projectData.linesMap ?: emptyMap()
+    sourceProjectData.copyAllClassDataWithFiltering(projectDataCopy, codeUpdateInfo)
 
+    val mappings: Map<String, Array<FileMapData>> = sourceProjectData.linesMap ?: emptyMap()
     mappings.forEach { (key, value) ->
         projectDataCopy.addLineMaps(key, value)
     }
     return projectDataCopy
+}
+
+private fun ProjectData.copyAllClassDataWithFiltering(
+    copyToProjectData: ProjectData,
+    codeUpdateInfo: CodeUpdateInfo,
+) {
+    val sourceProjectData: ProjectData = this
+    sourceProjectData.classesCollection.asSequence()
+        .filter { sourceClassData ->
+            val classFile: ClassFile = classFileFrom(sourceClassData)
+            codeUpdateInfo.isInfoExists(classFile)
+        }
+        .map { sourceClassData ->
+            ClassDataCopyContext(sourceClassData.name, sourceProjectData, copyToProjectData)
+        }
+        .forEach { classCopyContext ->
+            classCopyContext.copyClassData()
+        }
+}
+
+private data class ClassDataCopyContext(
+    val className: String,
+    val sourceProjectData: ProjectData,
+    val copyToProjectData: ProjectData,
+) {
+
+    val sourceClassData: ClassData
+        get() = sourceProjectData.getOrCreateClassData(className)
+
+    private val allSourceClassInstructions: Map<String, ClassInstructions>
+        get() = sourceProjectData.instructions
+
+    private val copyToClassData: ClassData
+        get() = copyToProjectData.getOrCreateClassData(className)
+
+    private val copyToClassInstructions: ClassInstructions
+        get() = copyToProjectData.instructions.computeIfAbsent(className) {
+            ClassInstructions()
+        }
+
+    fun copyClassData() {
+        val sourceClass: ClassData = sourceClassData
+        copyToClassData.apply {
+            source = sourceClass.source
+            merge(sourceClass)
+        }
+
+        copyClassInstructions()
+    }
+
+    private fun copyClassInstructions() {
+        val className: String = className
+        allSourceClassInstructions[className]?.let { sourceClassInstructions ->
+            copyToClassInstructions.merge(sourceClassInstructions, copyToClassData)
+        }
+    }
 }
 
 private fun classFileFrom(classData: ClassData) = ClassFile(

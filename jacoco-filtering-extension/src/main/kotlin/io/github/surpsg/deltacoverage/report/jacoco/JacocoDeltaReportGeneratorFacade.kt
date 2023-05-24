@@ -1,10 +1,9 @@
-package io.github.surpsg.deltacoverage.report
+package io.github.surpsg.deltacoverage.report.jacoco
 
-import io.github.surpsg.deltacoverage.config.DeltaCoverageConfig
-import io.github.surpsg.deltacoverage.diff.DiffSource
-import io.github.surpsg.deltacoverage.diff.diffSourceFactory
-import io.github.surpsg.deltacoverage.report.analyzable.AnalyzableReport
-import io.github.surpsg.deltacoverage.report.analyzable.analyzableReportFactory
+import io.github.surpsg.deltacoverage.report.ReportContext
+import io.github.surpsg.deltacoverage.report.DeltaReportGeneratorFacade
+import io.github.surpsg.deltacoverage.report.jacoco.analyzable.AnalyzableReport
+import io.github.surpsg.deltacoverage.report.jacoco.analyzable.analyzableReportFactory
 import org.jacoco.core.analysis.Analyzer
 import org.jacoco.core.analysis.CoverageBuilder
 import org.jacoco.core.analysis.IBundleCoverage
@@ -13,35 +12,29 @@ import org.jacoco.core.tools.ExecFileLoader
 import org.jacoco.report.DirectorySourceFileLocator
 import org.jacoco.report.ISourceFileLocator
 import org.jacoco.report.MultiSourceFileLocator
+import org.slf4j.Logger
 import org.slf4j.LoggerFactory
-import java.io.File
 import java.io.IOException
 
-class ReportGenerator(
-    projectRoot: File,
-    private val deltaCoverageConfig: DeltaCoverageConfig
-) {
-    private val jacocoExec: Set<File> = deltaCoverageConfig.execFiles.filter(File::exists).toSet()
-    private val classesSources: Set<File> = deltaCoverageConfig.classFiles.filter(File::exists).toSet()
-    private val src: Set<File> = deltaCoverageConfig.sourceFiles.filter(File::exists).toSet()
+internal class JacocoDeltaReportGeneratorFacade(
+    reportContext: ReportContext
+) : DeltaReportGeneratorFacade(reportContext) {
 
-    private val diffSource: DiffSource = diffSourceFactory(projectRoot, deltaCoverageConfig.diffSourceConfig)
-    private val analyzableReports: Set<AnalyzableReport> = analyzableReportFactory(deltaCoverageConfig, diffSource)
+    override fun generateReport(): DeltaReportGeneratorFacade {
+        val analyzableReports: Set<AnalyzableReport> = analyzableReportFactory(reportContext)
 
-    fun saveDiffToDir(dir: File) = diffSource.saveDiffTo(dir)
-
-    fun create() {
         val execFileLoader = loadExecFiles()
-
         analyzableReports.forEach {
             create(execFileLoader, it)
         }
+
+        return this
     }
 
     private fun loadExecFiles(): ExecFileLoader {
         val execFileLoader = ExecFileLoader()
-        jacocoExec.forEach {
-            log.debug("Loading exec data $it")
+        reportContext.binaryCoverageFiles.forEach {
+            log.debug("Loading exec data: {}", it)
             try {
                 execFileLoader.load(it)
             } catch (e: IOException) {
@@ -78,14 +71,14 @@ class ReportGenerator(
 
             val analyzer = createAnalyzer(builder)
 
-            classesSources.forEach { analyzer.analyzeAll(it) }
+            reportContext.classFiles.forEach { analyzer.analyzeAll(it) }
 
-            return builder.getBundle(deltaCoverageConfig.reportName)
+            return builder.getBundle(reportContext.deltaCoverageConfig.reportName)
         }
     }
 
     private fun createSourcesLocator(): ISourceFileLocator {
-        return src.asSequence()
+        return reportContext.srcFiles.asSequence()
             .map {
                 DirectorySourceFileLocator(it, "utf-8", DEFAULT_TAB_WIDTH)
             }
@@ -97,7 +90,7 @@ class ReportGenerator(
     }
 
     companion object {
-        val log = LoggerFactory.getLogger(ReportGenerator::class.java)
+        val log: Logger = LoggerFactory.getLogger(JacocoDeltaReportGeneratorFacade::class.java)
 
         const val DEFAULT_TAB_WIDTH = 4
     }

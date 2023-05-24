@@ -1,9 +1,8 @@
-package io.github.surpsg.deltacoverage.report.analyzable
+package io.github.surpsg.deltacoverage.report.jacoco.analyzable
 
-import io.github.surpsg.deltacoverage.config.DeltaCoverageConfig
-import io.github.surpsg.deltacoverage.diff.DiffSource
-import io.github.surpsg.deltacoverage.report.DiffReport
-import io.github.surpsg.deltacoverage.report.reportFactory
+import io.github.surpsg.deltacoverage.report.JacocoDeltaReport
+import io.github.surpsg.deltacoverage.report.ReportContext
+import io.github.surpsg.deltacoverage.report.jacoco.reportFactory
 import org.jacoco.core.analysis.Analyzer
 import org.jacoco.core.analysis.ICoverageVisitor
 import org.jacoco.core.data.ExecutionDataStore
@@ -16,13 +15,12 @@ internal interface AnalyzableReport {
 }
 
 internal fun analyzableReportFactory(
-    deltaCoverageConfig: DeltaCoverageConfig,
-    diffSource: DiffSource
+    reportContext: ReportContext
 ): Set<AnalyzableReport> {
-    return reportFactory(deltaCoverageConfig, diffSource)
+    return reportFactory(reportContext)
         .map { reportMode ->
             when (reportMode) {
-                is DiffReport -> DeltaCoverageAnalyzableReport(reportMode)
+                is JacocoDeltaReport -> DeltaCoverageAnalyzableReport(reportMode)
                 else -> FullCoverageAnalyzableReport(reportMode)
             }
         }.toSet()

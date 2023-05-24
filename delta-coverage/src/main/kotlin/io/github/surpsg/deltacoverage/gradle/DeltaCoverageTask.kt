@@ -5,7 +5,8 @@ import io.github.surpsg.deltacoverage.config.DiffSourceConfig
 import io.github.surpsg.deltacoverage.config.ReportConfig
 import io.github.surpsg.deltacoverage.config.ReportsConfig
 import io.github.surpsg.deltacoverage.config.ViolationRuleConfig
-import io.github.surpsg.deltacoverage.report.ReportGenerator
+import io.github.surpsg.deltacoverage.report.CoverageEngine
+import io.github.surpsg.deltacoverage.report.DeltaReportFacadeFactory
 import org.gradle.api.DefaultTask
 import org.gradle.api.file.FileCollection
 import org.gradle.api.model.ObjectFactory
@@ -78,11 +79,16 @@ open class DeltaCoverageTask @Inject constructor(
             log.debug("Creating of report dir '$absolutePath' is successful: $isCreated")
         }
 
-        val reportGenerator = ReportGenerator(rootProjectDirProperty.get(), buildDeltaCoverageConfig())
-        reportGenerator.saveDiffToDir(reportDir).apply {
-            log.info("diff content saved to '$absolutePath'")
-        }
-        reportGenerator.create()
+        DeltaReportFacadeFactory
+            .buildFacade(
+                rootProjectDirProperty.get(),
+                CoverageEngine.JACOCO,
+                buildDeltaCoverageConfig()
+            )
+            .saveDiffTo(reportDir) { diffFile ->
+                log.info("diff content saved to '${diffFile.absolutePath}'")
+            }
+            .generateReport()
     }
 
     private fun getReportOutputDir(): Path {
@@ -117,7 +123,7 @@ open class DeltaCoverageTask @Inject constructor(
                 minLines = diffCovConfig.violationRules.minLines.get(),
                 failOnViolation = diffCovConfig.violationRules.failOnViolation.get()
             ),
-            execFiles = sourcesConfigurator.obtainExecFiles().files,
+            coverageBinaryFiles = sourcesConfigurator.obtainExecFiles().files,
             classFiles = collectClassesToAnalyze(diffCovConfig).files,
             sourceFiles = sourcesConfigurator.obtainSourcesFiles().files
         )

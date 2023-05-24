@@ -1,27 +1,30 @@
-package io.github.surpsg.deltacoverage.report
+package io.github.surpsg.deltacoverage.report.jacoco
 
 import io.github.surpsg.deltacoverage.config.DeltaCoverageConfig
 import io.github.surpsg.deltacoverage.config.ReportsConfig
-import io.github.surpsg.deltacoverage.config.ViolationRuleConfig
-import io.github.surpsg.deltacoverage.diff.DiffSource
-import org.jacoco.core.analysis.ICoverageNode
-import org.jacoco.report.check.Limit
+import io.github.surpsg.deltacoverage.report.FullReport
+import io.github.surpsg.deltacoverage.report.JacocoDeltaReport
+import io.github.surpsg.deltacoverage.report.Report
+import io.github.surpsg.deltacoverage.report.ReportContext
+import io.github.surpsg.deltacoverage.report.ReportType
+import io.github.surpsg.deltacoverage.report.Violation
 import org.jacoco.report.check.Rule
 import java.nio.file.Paths
 
 internal fun reportFactory(
-    diffSourceConfig: DeltaCoverageConfig,
-    diffSource: DiffSource
+    reportContext: ReportContext
 ): Set<FullReport> {
+    val diffSourceConfig: DeltaCoverageConfig = reportContext.deltaCoverageConfig
+
     val reports: Set<Report> = diffSourceConfig.reportsConfig.toReportTypes()
 
     val violationRule: Rule = buildRule(diffSourceConfig.violationRuleConfig)
     val baseReportDir = Paths.get(diffSourceConfig.reportsConfig.baseReportDir)
     val report: MutableSet<FullReport> = mutableSetOf(
-        DiffReport(
+        JacocoDeltaReport(
             baseReportDir.resolve("deltaCoverage"),
             reports,
-            diffSource,
+            reportContext.codeUpdateInfo,
             Violation(
                 diffSourceConfig.violationRuleConfig.failOnViolation,
                 listOf(violationRule)
@@ -46,24 +49,3 @@ private fun ReportsConfig.toReportTypes(): Set<Report> = sequenceOf(
 ).filter { it.second.enabled }.map {
     Report(it.first, it.second.outputFileName)
 }.toSet()
-
-private fun buildRule(
-    violationRulesOptions: ViolationRuleConfig
-): Rule {
-    return sequenceOf(
-        ICoverageNode.CounterEntity.INSTRUCTION to violationRulesOptions.minInstructions,
-        ICoverageNode.CounterEntity.BRANCH to violationRulesOptions.minBranches,
-        ICoverageNode.CounterEntity.LINE to violationRulesOptions.minLines
-    ).filter {
-        it.second > 0.0
-    }.map {
-        Limit().apply {
-            setCounter(it.first.name)
-            minimum = it.second.toString()
-        }
-    }.toList().let {
-        Rule().apply {
-            limits = it
-        }
-    }
-}

@@ -10,10 +10,10 @@ import org.objectweb.asm.MethodVisitor
 import org.objectweb.asm.tree.MethodNode
 
 internal open class FilteringClassAnalyzer(
-        private val coverage: ClassCoverageImpl,
-        private val probes: BooleanArray?,
-        private val stringPool: StringPool,
-        customFilter: IFilter
+    private val coverage: ClassCoverageImpl,
+    private val probes: BooleanArray?,
+    private val stringPool: StringPool,
+    customFilter: IFilter
 ) : ClassAnalyzer(coverage, probes, stringPool) {
 
     private val filter: IFilter
@@ -60,11 +60,11 @@ internal open class FilteringClassAnalyzer(
     }
 
     private fun addMethodCoverage(
-            name: String,
-            desc: String,
-            signature: String?,
-            icc: InstructionsBuilder,
-            methodNode: MethodNode
+        name: String,
+        desc: String,
+        signature: String?,
+        icc: InstructionsBuilder,
+        methodNode: MethodNode
     ) {
         val methodCoverageCalculator = MethodCoverageCalculator(icc.instructions)
         filter.filter(methodNode, this, methodCoverageCalculator)

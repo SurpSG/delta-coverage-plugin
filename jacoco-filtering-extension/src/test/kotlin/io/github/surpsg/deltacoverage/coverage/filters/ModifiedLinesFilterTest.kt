@@ -1,7 +1,7 @@
 package io.github.surpsg.deltacoverage.coverage.filters
 
 import io.github.surpsg.deltacoverage.diff.CodeUpdateInfo
-import io.github.surpsg.deltacoverage.filters.ModifiedLinesFilter
+import io.github.surpsg.deltacoverage.report.jacoco.filters.ModifiedLinesFilter
 import io.kotest.core.spec.style.StringSpec
 import io.kotest.data.forAll
 import io.kotest.data.row

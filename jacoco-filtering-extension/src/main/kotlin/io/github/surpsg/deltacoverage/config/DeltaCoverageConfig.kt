@@ -33,7 +33,7 @@ data class DeltaCoverageConfig(
     val diffSourceConfig: DiffSourceConfig,
     val reportsConfig: ReportsConfig,
     val violationRuleConfig: ViolationRuleConfig,
-    val execFiles: Set<File>,
+    val coverageBinaryFiles: Set<File>,
     val classFiles: Set<File>,
     val sourceFiles: Set<File>
 )

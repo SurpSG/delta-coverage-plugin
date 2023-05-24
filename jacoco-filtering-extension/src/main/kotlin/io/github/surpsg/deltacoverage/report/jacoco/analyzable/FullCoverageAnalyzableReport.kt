@@ -1,4 +1,4 @@
-package io.github.surpsg.deltacoverage.report.analyzable
+package io.github.surpsg.deltacoverage.report.jacoco.analyzable
 
 import io.github.surpsg.deltacoverage.report.FullReport
 import io.github.surpsg.deltacoverage.report.ReportType

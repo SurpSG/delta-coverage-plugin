@@ -1,4 +1,4 @@
-package io.github.surpsg.deltacoverage.filters
+package io.github.surpsg.deltacoverage.report.jacoco.filters
 
 import io.github.surpsg.deltacoverage.diff.CodeUpdateInfo
 import io.github.surpsg.deltacoverage.diff.parse.ClassFile
