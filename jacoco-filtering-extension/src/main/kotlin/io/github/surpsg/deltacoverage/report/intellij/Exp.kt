@@ -16,10 +16,15 @@ fun main() {
         reportsConfig = ReportsConfig(
             baseReportDir = "/home/sergnat/ideaProjects/delta-coverage-gradle/build/rep",
             html = ReportConfig(enabled = true, outputFileName = "khtml"),
-            xml = ReportConfig(enabled = true, outputFileName = "kxml"),
-            csv = ReportConfig(enabled = true, outputFileName = "kcsv"),
+            xml = ReportConfig(enabled = true, outputFileName = "kxml.xml"),
+            csv = ReportConfig(enabled = false, outputFileName = "kcsv.csv"),
         ),
-        violationRuleConfig = ViolationRuleConfig(),
+        violationRuleConfig = ViolationRuleConfig(
+            failOnViolation = true,
+            minLines = 0.9,
+            minBranches = 0.7,
+            minInstructions = 0.7,
+        ),
         coverageBinaryFiles = setOf(File("/home/sergnat/ideaProjects/delta-coverage-gradle/jacoco-filtering-extension/build/kover/raw-reports/test.ic")),
         sourceFiles = setOf(
             File("/home/sergnat/ideaProjects/delta-coverage-gradle/jacoco-filtering-extension/src/main/kotlin"),
