@@ -1,8 +1,9 @@
 package io.github.surpsg.deltacoverage.report
 
+import io.github.surpsg.deltacoverage.config.CoverageEntity
 import io.github.surpsg.deltacoverage.config.DeltaCoverageConfig
 import io.github.surpsg.deltacoverage.config.ReportsConfig
-import io.github.surpsg.deltacoverage.config.ViolationRuleConfig
+import io.github.surpsg.deltacoverage.config.CoverageRulesConfig
 import io.github.surpsg.deltacoverage.diff.DiffSource
 import org.jacoco.core.analysis.ICoverageNode
 import org.jacoco.report.check.Limit
@@ -15,7 +16,7 @@ internal fun reportFactory(
 ): Set<FullReport> {
     val reports: Set<Report> = diffSourceConfig.reportsConfig.toReportTypes()
 
-    val violationRule: Rule = buildRule(diffSourceConfig.violationRuleConfig)
+    val violationRule: Rule = buildRule(diffSourceConfig.coverageRulesConfig)
     val baseReportDir = Paths.get(diffSourceConfig.reportsConfig.baseReportDir)
     val report: MutableSet<FullReport> = mutableSetOf(
         DiffReport(
@@ -23,7 +24,7 @@ internal fun reportFactory(
             reports,
             diffSource,
             Violation(
-                diffSourceConfig.violationRuleConfig.failOnViolation,
+                diffSourceConfig.coverageRulesConfig.failOnViolation,
                 listOf(violationRule)
             )
         )
@@ -48,22 +49,30 @@ private fun ReportsConfig.toReportTypes(): Set<Report> = sequenceOf(
 }.toSet()
 
 private fun buildRule(
-    violationRulesOptions: ViolationRuleConfig
+    violationRulesOptions: CoverageRulesConfig
 ): Rule {
-    return sequenceOf(
-        ICoverageNode.CounterEntity.INSTRUCTION to violationRulesOptions.minInstructions,
-        ICoverageNode.CounterEntity.BRANCH to violationRulesOptions.minBranches,
-        ICoverageNode.CounterEntity.LINE to violationRulesOptions.minLines
-    ).filter {
-        it.second > 0.0
-    }.map {
-        Limit().apply {
-            setCounter(it.first.name)
-            minimum = it.second.toString()
+    return violationRulesOptions.entitiesRules.asSequence()
+        .map { (coverageEntity, minValue) ->
+            coverageEntity.toJacocoEntity() to minValue.minCoverageRatio
         }
-    }.toList().let {
-        Rule().apply {
-            limits = it
+        .filter { (_, minCoverage) ->
+            minCoverage > 0.0
+        }.map { (counterType, minCoverage) ->
+            Limit().apply {
+                setCounter(counterType.name)
+                minimum = minCoverage.toString()
+            }
+        }.toList().let {
+            Rule().apply {
+                limits = it
+            }
         }
+}
+
+private fun CoverageEntity.toJacocoEntity(): ICoverageNode.CounterEntity {
+    return when (this) {
+        CoverageEntity.INSTRUCTION -> ICoverageNode.CounterEntity.INSTRUCTION
+        CoverageEntity.BRANCH -> ICoverageNode.CounterEntity.BRANCH
+        CoverageEntity.LINE -> ICoverageNode.CounterEntity.LINE
     }
 }

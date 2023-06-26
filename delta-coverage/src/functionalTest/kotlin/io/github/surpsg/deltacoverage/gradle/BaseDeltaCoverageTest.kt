@@ -1,5 +1,7 @@
 package io.github.surpsg.deltacoverage.gradle
 
+import io.github.surpsg.deltacoverage.gradle.resources.copyDirFromResources
+import io.github.surpsg.deltacoverage.gradle.resources.toUnixAbsolutePath
 import org.gradle.testkit.runner.GradleRunner
 import org.junit.jupiter.api.io.TempDir
 import java.io.File

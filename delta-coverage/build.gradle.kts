@@ -1,6 +1,9 @@
+import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
+
 plugins {
     `gradle-plugin-conventions`
     alias(deps.plugins.shadowPlugin)
+    `java-test-fixtures`
 }
 
 gradlePlugin {
@@ -17,7 +20,7 @@ gradlePlugin {
         }
     }
 }
-tasks.withType(com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar::class.java) {
+tasks.withType(ShadowJar::class.java) {
     archiveClassifier.set("")
 }
 
@@ -28,4 +31,7 @@ dependencies {
 
     functionalTestImplementation(project(":jacoco-filtering-extension"))
     functionalTestImplementation(deps.jgit)
+    functionalTestImplementation(testFixtures(project))
+
+    testFixturesImplementation(deps.assertj)
 }

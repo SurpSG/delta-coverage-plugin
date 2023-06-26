@@ -4,6 +4,7 @@ import org.gradle.api.Action
 import org.gradle.api.file.FileCollection
 import org.gradle.api.model.ObjectFactory
 import org.gradle.api.provider.ListProperty
+import org.gradle.api.provider.MapProperty
 import org.gradle.api.provider.Property
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputFiles
@@ -40,7 +41,7 @@ open class DeltaCoverageConfiguration @Inject constructor(
     val reportConfiguration: ReportsConfiguration = ReportsConfiguration(objectFactory)
 
     @Nested
-    val violationRules: ViolationRules = ViolationRules(objectFactory)
+    val violationRules: ViolationRules = objectFactory.newInstance(ViolationRules::class.java)
 
     fun reports(action: Action<in ReportsConfiguration>) {
         action.execute(reportConfiguration)
@@ -128,16 +129,78 @@ open class ReportsConfiguration(
             "baseReportDir='$baseReportDir'"
 }
 
-open class ViolationRules(
-    objectFactory: ObjectFactory,
+enum class CoverageEntity {
+    INSTRUCTION,
+    BRANCH,
+    LINE,
+}
+
+open class ViolationRules @Inject constructor(
+    private val objectFactory: ObjectFactory,
 ) {
 
+    @Nested
+    val rules: MapProperty<CoverageEntity, ViolationRule> = objectFactory.map<CoverageEntity, ViolationRule>()
+
+    init {
+        rules.putAll(
+            CoverageEntity.values().associateWith {
+                objectFactory.newInstance(ViolationRule::class.java)
+            }
+        )
+    }
+
+    @Deprecated(
+        message = """
+        This property will be removed in the next major release.
+        
+        Use the following syntax instead: 
+        deltaCoverageReport {
+            violationRules {
+                rule(io.github.surpsg.deltacoverage.gradle.CoverageEntity.LINE) {
+                    minCoverageRatio.set(0.7d)
+                }
+            }
+        }
+    """,
+        replaceWith = ReplaceWith("this.rule(coverageEntity, action)")
+    )
     @Input
     val minLines: Property<Double> = objectFactory.doubleProperty(0.0)
 
+    @Deprecated(
+        message = """
+        This property will be removed in the next major release.
+        
+        Use the following syntax instead: 
+        deltaCoverageReport {
+            violationRules {
+                rule(io.github.surpsg.deltacoverage.gradle.CoverageEntity.BRANCH) {
+                    minCoverageRatio.set(0.7d)
+                }
+            }
+        }
+    """,
+        replaceWith = ReplaceWith("this.rule(coverageEntity, action)")
+    )
     @Input
     val minBranches: Property<Double> = objectFactory.doubleProperty(0.0)
 
+    @Deprecated(
+        message = """
+        This property will be removed in the next major release.
+        
+        Use the following syntax instead: 
+        deltaCoverageReport {
+            violationRules {
+                rule(io.github.surpsg.deltacoverage.gradle.CoverageEntity.INSTRUCTION) {
+                    minCoverageRatio.set(0.7d)
+                }
+            }
+        }
+    """,
+        replaceWith = ReplaceWith("this.rule(coverageEntity, action)")
+    )
     @Input
     val minInstructions: Property<Double> = objectFactory.doubleProperty(0.0)
 
@@ -151,6 +214,19 @@ open class ViolationRules(
         failOnViolation.set(true)
     }
 
+    operator fun CoverageEntity.invoke(action: Action<in ViolationRule>) = rule(this, action)
+
+    fun rule(coverageEntity: CoverageEntity, action: Action<in ViolationRule>) {
+        val newViolationRule: ViolationRule = rules.get().getValue(coverageEntity)
+        action.execute(newViolationRule)
+
+        when (coverageEntity) {
+            CoverageEntity.INSTRUCTION -> minInstructions.set(newViolationRule.minCoverageRatio.get())
+            CoverageEntity.BRANCH -> minBranches.set(newViolationRule.minCoverageRatio.get())
+            CoverageEntity.LINE -> minLines.set(newViolationRule.minCoverageRatio.get())
+        }
+    }
+
     override fun toString(): String {
         return "ViolationRules(" +
                 "minLines=${minLines.get()}, " +
@@ -158,6 +234,24 @@ open class ViolationRules(
                 "minInstructions=${minInstructions.get()}, " +
                 "failOnViolation=${failOnViolation.get()}" +
                 ")"
+    }
+
+}
+
+open class ViolationRule @Inject constructor(
+    objectFactory: ObjectFactory,
+) {
+
+    @Input
+    val minCoverageRatio: Property<Double> = objectFactory.doubleProperty(0.0)
+
+    @Input
+    @Optional
+    val entityCountThreshold: Property<Int?> = objectFactory.property(Int::class.java)
+
+    override fun toString(): String {
+        return "ViolationRule(minCoverageRatio=${minCoverageRatio.get()}, " +
+                "entityCountThreshold=${entityCountThreshold.orNull})"
     }
 }
 
@@ -178,3 +272,6 @@ private fun ObjectFactory.stringProperty(default: () -> String): Property<String
         default()
     )
 }
+
+private inline fun <reified K, reified V> ObjectFactory.map(): MapProperty<K, V> =
+    mapProperty(K::class.java, V::class.java)

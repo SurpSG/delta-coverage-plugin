@@ -2,6 +2,7 @@ package io.github.surpsg.deltacoverage.gradle
 
 import io.github.surpsg.deltacoverage.diff.git.getCrlf
 import io.github.surpsg.deltacoverage.gradle.DeltaCoveragePlugin.Companion.DELTA_COVERAGE_TASK
+import io.github.surpsg.deltacoverage.gradle.resources.getResourceFile
 import org.eclipse.jgit.api.Git
 import org.eclipse.jgit.lib.ConfigConstants
 import org.eclipse.jgit.lib.Repository

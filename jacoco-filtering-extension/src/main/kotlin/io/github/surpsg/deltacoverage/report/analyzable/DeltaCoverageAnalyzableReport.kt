@@ -1,5 +1,6 @@
 package io.github.surpsg.deltacoverage.report.analyzable
 
+import io.github.surpsg.deltacoverage.config.CoverageRulesConfig
 import io.github.surpsg.deltacoverage.diff.CodeUpdateInfo
 import io.github.surpsg.deltacoverage.diff.parse.ClassFile
 import io.github.surpsg.deltacoverage.diff.parse.ModifiedLinesDiffParser
@@ -17,6 +18,7 @@ import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
 internal class DeltaCoverageAnalyzableReport(
+    private val violationRuleConfig: CoverageRulesConfig,
     private val diffReport: DiffReport
 ) : FullCoverageAnalyzableReport(diffReport) {
 
@@ -59,12 +61,13 @@ internal class DeltaCoverageAnalyzableReport(
         rules: List<Rule>
     ): IReportVisitor {
         val log = LoggerFactory.getLogger("ViolationRules")
-        val violations = mutableListOf<String>()
+        val violationsOutputResolver = ViolationsOutputResolver(violationRuleConfig)
 
         class CoverageRulesVisitor(
             rulesCheckerVisitor: IReportVisitor
         ) : IReportVisitor by rulesCheckerVisitor {
             override fun visitEnd() {
+                val violations = violationsOutputResolver.getViolations()
                 log.warn("Fail on violations: $failOnViolation. Found violations: ${violations.size}.")
                 if (violations.isNotEmpty() && failOnViolation) {
                     throw Exception(violations.joinToString("\n"))
@@ -72,12 +75,10 @@ internal class DeltaCoverageAnalyzableReport(
             }
         }
 
-        return RulesChecker().apply {
-            setRules(rules)
-        }.createVisitor { _, _, _, message ->
-            log.info("New violation: $message")
-            violations += message
-        }.let { CoverageRulesVisitor(it) }
+        return RulesChecker()
+            .apply { setRules(rules) }
+            .createVisitor(violationsOutputResolver)
+            .let { CoverageRulesVisitor(it) }
     }
 
     private companion object {

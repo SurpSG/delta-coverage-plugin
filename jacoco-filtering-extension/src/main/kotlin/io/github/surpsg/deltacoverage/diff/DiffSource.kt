@@ -74,15 +74,9 @@ internal fun diffSourceFactory(
     projectRoot: File,
     diffSourceConfig: DiffSourceConfig
 ): DiffSource = when {
-
-    diffSourceConfig.file.isNotBlank() && diffSourceConfig.url.isNotBlank() -> throw IllegalStateException(
-        "Expected only Git configuration or file or URL diff source more than one: " +
-                "git.diffBase=${diffSourceConfig.diffBase} file=${diffSourceConfig.file}, url=${diffSourceConfig.url}"
-    )
-
     diffSourceConfig.file.isNotBlank() -> FileDiffSource(diffSourceConfig.file)
     diffSourceConfig.url.isNotBlank() -> UrlDiffSource(diffSourceConfig.url)
     diffSourceConfig.diffBase.isNotBlank() -> GitDiffSource(projectRoot, diffSourceConfig.diffBase)
 
-    else -> throw IllegalStateException("Expected Git configuration or file or URL diff source but all are blank")
+    else -> error("Expected Git configuration or file or URL diff source but all are blank")
 }

@@ -21,7 +21,7 @@ class ReportGenerator(
     projectRoot: File,
     private val deltaCoverageConfig: DeltaCoverageConfig
 ) {
-    private val jacocoExec: Set<File> = deltaCoverageConfig.execFiles.filter(File::exists).toSet()
+    private val jacocoExec: Set<File> = deltaCoverageConfig.binaryCoverageFiles.filter(File::exists).toSet()
     private val classesSources: Set<File> = deltaCoverageConfig.classFiles.filter(File::exists).toSet()
     private val src: Set<File> = deltaCoverageConfig.sourceFiles.filter(File::exists).toSet()
 
