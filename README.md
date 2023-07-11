@@ -155,14 +155,24 @@ configure<io.github.surpsg.deltacoverage.gradle.DeltaCoverageConfiguration> {
         reportDir.set("dir/to/store/reports") // Optional. Default 'build/reports/jacoco/deltaCoverage'
     }
 
-    violationRules.failIfCoverageLessThan(0.9d) // Optional. The function sets all coverage metrics to a single value, sets failOnViolation to true
-    
-    // configuration below is equivalent to the configuration above
+    // If violation rules are not configured, then no violations will be checked.
+    violationRules.failIfCoverageLessThan(0.9d) // Optional. The function sets min coverage ration for instructions, branches and lines to '0.9', sets failOnViolation to 'true'.
+    // Alternative way to set violation rules.
     violationRules {        
-        minBranches.set(0.9d) // Optional. Default `0.0`
-        minLines.set(0.9d) // Optional. Default `0.0`
-        minInstructions.set(0.9d) // Optional. Default `0.0`
-        failOnViolation.set(true) // Optional. Default `false`
+        failOnViolation.set(true) // Optional. Default `false`. If `true` then task will fail if any violation is found.
+        
+        rule(io.github.surpsg.deltacoverage.gradle.CoverageEntity.INSTRUCTION) {
+            minCoverageRatio.set(0.9d) // Optional. If coverage ration is set then the plugin will check coverage ratio for this entity.
+            entityCountThreshold.set(1234) // Optional. Disabled by default. The plugin ignores violation if the entity count is less than the threshold.
+        }
+        rule(io.github.surpsg.deltacoverage.gradle.CoverageEntity.LINE) {
+            minCoverageRatio.set(0.8d) 
+            entityCountThreshold.set(567) 
+        }
+        rule(io.github.surpsg.deltacoverage.gradle.CoverageEntity.BRANCH) {
+            minCoverageRatio.set(0.7d)
+            entityCountThreshold.set(890)
+        }
     }
 }
 ```

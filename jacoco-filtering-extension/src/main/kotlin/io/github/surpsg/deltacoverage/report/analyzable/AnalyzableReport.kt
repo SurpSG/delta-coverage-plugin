@@ -22,7 +22,7 @@ internal fun analyzableReportFactory(
     return reportFactory(deltaCoverageConfig, diffSource)
         .map { reportMode ->
             when (reportMode) {
-                is DiffReport -> DeltaCoverageAnalyzableReport(reportMode)
+                is DiffReport -> DeltaCoverageAnalyzableReport(deltaCoverageConfig.coverageRulesConfig, reportMode)
                 else -> FullCoverageAnalyzableReport(reportMode)
             }
         }.toSet()

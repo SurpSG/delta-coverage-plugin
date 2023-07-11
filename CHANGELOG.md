@@ -1,5 +1,35 @@
 # Delta-Coverage Gradle plugin Changelog
 
+## 1.1.0
+### Added
+- Ignore coverage violation if a coverage entity count is less than threshold
+  <details>
+    <summary>Usage example</summary>
+        
+    ```kotlin
+    // kotlin gradle dsl 
+    configure<io.github.surpsg.deltacoverage.gradle.DeltaCoverageConfiguration> {
+      violationRules {
+          failOnViolation.set(true)
+          
+          rule(io.github.surpsg.deltacoverage.gradle.CoverageEntity.INSTRUCTION) {
+              minCoverageRatio.set(0.9)
+              entityCountThreshold.set(1234)
+          }
+          rule(io.github.surpsg.deltacoverage.gradle.CoverageEntity.LINE) {
+              minCoverageRatio.set(0.8) 
+              entityCountThreshold.set(567) 
+          }
+          rule(io.github.surpsg.deltacoverage.gradle.CoverageEntity.BRANCH) {
+              minCoverageRatio.set(0.7)
+              entityCountThreshold.set(890)
+          }
+      }
+    }
+        
+    ```
+    </details>
+
 ## 1.0.0
 ### Added
 - `Delta Coverage` plugin applies JaCoCo plugin to a project and all it's subprojects

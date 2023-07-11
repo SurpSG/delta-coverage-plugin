@@ -1,10 +1,13 @@
 package io.github.surpsg.deltacoverage.gradle
 
+import io.github.surpsg.deltacoverage.config.CoverageEntity
+import io.github.surpsg.deltacoverage.gradle.CoverageEntity as GradleCoverageEntity
 import io.github.surpsg.deltacoverage.config.DeltaCoverageConfig
 import io.github.surpsg.deltacoverage.config.DiffSourceConfig
 import io.github.surpsg.deltacoverage.config.ReportConfig
 import io.github.surpsg.deltacoverage.config.ReportsConfig
-import io.github.surpsg.deltacoverage.config.ViolationRuleConfig
+import io.github.surpsg.deltacoverage.config.ViolationRule
+import io.github.surpsg.deltacoverage.config.CoverageRulesConfig
 import io.github.surpsg.deltacoverage.report.ReportGenerator
 import org.gradle.api.DefaultTask
 import org.gradle.api.file.FileCollection
@@ -97,30 +100,70 @@ open class DeltaCoverageTask @Inject constructor(
 
     private fun buildDeltaCoverageConfig(): DeltaCoverageConfig {
         val diffCovConfig: DeltaCoverageConfiguration = deltaCoverageReport.get()
-        return DeltaCoverageConfig(
-            reportName = projectDirProperty.map { it.name }.get(),
-            diffSourceConfig = DiffSourceConfig(
-                file = diffCovConfig.diffSource.file.get(),
-                url = diffCovConfig.diffSource.url.get(),
+        return DeltaCoverageConfig {
+            reportName = projectDirProperty.map { it.name }.get()
+
+            diffSourceConfig = DiffSourceConfig {
+                file = diffCovConfig.diffSource.file.get()
+                url = diffCovConfig.diffSource.url.get()
                 diffBase = diffCovConfig.diffSource.git.diffBase.get()
-            ),
-            reportsConfig = ReportsConfig(
-                baseReportDir = getReportOutputDir().toAbsolutePath().toString(),
-                html = ReportConfig(enabled = diffCovConfig.reportConfiguration.html.get(), "html"),
-                csv = ReportConfig(enabled = diffCovConfig.reportConfiguration.csv.get(), "report.csv"),
-                xml = ReportConfig(enabled = diffCovConfig.reportConfiguration.xml.get(), "report.xml"),
+            }
+
+            binaryCoverageFiles += sourcesConfigurator.obtainExecFiles().files
+            classFiles += collectClassesToAnalyze(diffCovConfig).files
+            sourceFiles += sourcesConfigurator.obtainSourcesFiles().files
+
+            reportsConfig = ReportsConfig {
+                baseReportDir = getReportOutputDir().toAbsolutePath().toString()
+                html = ReportConfig {
+                    outputFileName = "html"
+                    enabled = diffCovConfig.reportConfiguration.html.get()
+                }
+                csv = ReportConfig {
+                    outputFileName = "report.csv"
+                    enabled = diffCovConfig.reportConfiguration.csv.get()
+                }
+                xml = ReportConfig {
+                    outputFileName = "report.xml"
+                    enabled = diffCovConfig.reportConfiguration.xml.get()
+                }
                 fullCoverageReport = diffCovConfig.reportConfiguration.fullCoverageReport.get()
-            ),
-            violationRuleConfig = ViolationRuleConfig(
-                minBranches = diffCovConfig.violationRules.minBranches.get(),
-                minInstructions = diffCovConfig.violationRules.minInstructions.get(),
-                minLines = diffCovConfig.violationRules.minLines.get(),
-                failOnViolation = diffCovConfig.violationRules.failOnViolation.get()
-            ),
-            execFiles = sourcesConfigurator.obtainExecFiles().files,
-            classFiles = collectClassesToAnalyze(diffCovConfig).files,
-            sourceFiles = sourcesConfigurator.obtainSourcesFiles().files
+            }
+
+            coverageRulesConfig = buildCoverageRulesConfig(diffCovConfig)
+        }
+    }
+
+    private fun buildCoverageRulesConfig(diffCovConfig: DeltaCoverageConfiguration) = CoverageRulesConfig {
+        val deltaCoverageConfigRules: ViolationRules = diffCovConfig.violationRules
+        violationRules += listOf(
+            ViolationRule {
+                coverageEntity = CoverageEntity.INSTRUCTION
+                minCoverageRatio = deltaCoverageConfigRules.minInstructions.get()
+                applyNonNullableThreshold(deltaCoverageConfigRules, GradleCoverageEntity.INSTRUCTION)
+            },
+            ViolationRule {
+                coverageEntity = CoverageEntity.LINE
+                minCoverageRatio = deltaCoverageConfigRules.minLines.get()
+                applyNonNullableThreshold(deltaCoverageConfigRules, GradleCoverageEntity.LINE)
+            },
+            ViolationRule {
+                coverageEntity = CoverageEntity.BRANCH
+                minCoverageRatio = deltaCoverageConfigRules.minBranches.get()
+                applyNonNullableThreshold(deltaCoverageConfigRules, GradleCoverageEntity.BRANCH)
+            },
         )
+        failOnViolation = deltaCoverageConfigRules.failOnViolation.get()
+    }
+
+    private fun ViolationRule.Builder.applyNonNullableThreshold(
+        deltaCoverageConfigRules: ViolationRules,
+        entity: GradleCoverageEntity,
+    ) {
+        deltaCoverageConfigRules.rules.get()
+            .getValue(entity)
+            .entityCountThreshold.orNull
+            ?.let { instructionThreshold -> entityCountThreshold = instructionThreshold }
     }
 
     private fun collectClassesToAnalyze(

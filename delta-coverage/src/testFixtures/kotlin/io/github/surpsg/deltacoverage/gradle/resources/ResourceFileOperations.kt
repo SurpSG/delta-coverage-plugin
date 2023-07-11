@@ -1,4 +1,4 @@
-package io.github.surpsg.deltacoverage.gradle
+package io.github.surpsg.deltacoverage.gradle.resources
 
 import java.io.File
 
