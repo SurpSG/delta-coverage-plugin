@@ -37,7 +37,6 @@ sealed class ReportPathStrategy(
         override val reportFileName: String = reportsConfig.html.outputFileName
     }
 
-    @Deprecated("CSV report is deprecated")
     internal class Csv(
         reportsConfig: ReportsConfig,
     ) : ReportPathStrategy(reportsConfig) {

@@ -1,5 +1,11 @@
 # Delta-Coverage Gradle plugin Changelog
 
+## <NEXT-RELEASE>
+
+### Changed
+- Deleted deprecated CSV report generation.
+
+
 ## 2.0.2
 
 ### Fixed

@@ -134,10 +134,6 @@ open class ReportsConfiguration(
     @Input
     val xml: Property<Boolean> = objectFactory.booleanProperty(false)
 
-    @Deprecated(message = "This property will be removed in the next major release.")
-    @Input
-    val csv: Property<Boolean> = objectFactory.booleanProperty(false)
-
     @Input
     val baseReportDir: Property<String> = objectFactory.stringProperty {
         Paths.get("build", "reports").toString()
@@ -149,7 +145,6 @@ open class ReportsConfiguration(
     override fun toString() = "ReportsConfiguration(" +
             "html=${html.get()}, " +
             "xml=${xml.get()}, " +
-            "csv=${csv.get()}, " +
             "baseReportDir='${baseReportDir.get()}')"
 }
 
