@@ -1,5 +1,5 @@
 [versions]
-intellijCoverageVer = "1.0.744"
+intellijCoverageVer = "1.0.749"
 koverVer = "0.7.5"
 jacocoVer = "0.8.11"
 httpClientVer = "5.3"
