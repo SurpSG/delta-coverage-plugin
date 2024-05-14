@@ -41,11 +41,13 @@ class DeltaCoverageConfigurationKtsTest {
                 """
             configure<DeltaCoverageConfiguration> {
                 diffSource.file.set("$diffFilePath")
-                violationRules {
-                    failOnViolation.set(true)
-                    all {
-                        entityCountThreshold.set(100)
-                        minCoverageRatio.set(1.0)
+                defaultReportView {
+                    violationRules {
+                        failOnViolation.set(true)
+                        all {
+                            entityCountThreshold.set(100)
+                            minCoverageRatio.set(1.0)
+                        }
                     }
                 }
             }
@@ -54,7 +56,7 @@ class DeltaCoverageConfigurationKtsTest {
 
             // WHEN // THEN
             gradleRunner
-                .runDeltaCoverageTask()
+                .runDeltaCoverageTask(printLogs = true)
                 .assertOutputContainsStrings("violation", "ignored", "INSTRUCTION", "BRANCH", "LINE")
         }
 
@@ -64,12 +66,14 @@ class DeltaCoverageConfigurationKtsTest {
             buildFile.file.appendText(
                 """
             configure<DeltaCoverageConfiguration> {
-                diffSource.file.set("$diffFilePath")   
-                violationRules {
-                    failIfCoverageLessThan(1.0)
-                    INSTRUCTION.invoke { entityCountThreshold.set(1000) }
-                    BRANCH { entityCountThreshold.set(1000) }
-                    LINE { entityCountThreshold.set(1000) }
+                diffSource.file.set("$diffFilePath")
+                defaultReportView {
+                    violationRules {
+                        failIfCoverageLessThan(1.0)
+                        INSTRUCTION.invoke { entityCountThreshold.set(1000) }
+                        BRANCH { entityCountThreshold.set(1000) }
+                        LINE { entityCountThreshold.set(1000) }
+                    }
                 }
             }
         """.trimIndent()

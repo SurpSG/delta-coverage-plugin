@@ -14,46 +14,46 @@ import java.io.File
 class DiffSourceFactoryTest : StringSpec() {
     init {
 
-        "diffSourceFactory should return file diff source" {
+        "buildDiffSource should return file diff source" {
             // setup
             val filePath = "someFile"
             val diffConfig = DiffSourceConfig { file = filePath }
 
             // run
-            val diffSource = diffSourceFactory(File("."), diffConfig)
+            val diffSource = DiffSource.buildDiffSource(File("."), diffConfig)
 
             // assert
             diffSource.shouldBeTypeOf<FileDiffSource>()
             diffSource.sourceDescription shouldBe "File: $filePath"
         }
 
-        "diffSourceFactory should return url diff source" {
+        "buildDiffSource should return url diff source" {
             // setup
             val expectedUrl = "someUrl"
             val diffConfig = DiffSourceConfig { url = expectedUrl }
 
             // run
-            val diffSource = diffSourceFactory(File("."), diffConfig)
+            val diffSource = DiffSource.buildDiffSource(File("."), diffConfig)
 
             // assert
             diffSource.shouldBeTypeOf<UrlDiffSource>()
             diffSource.sourceDescription shouldBe "URL: $expectedUrl"
         }
 
-        "diffSourceFactory should return git diff source" {
+        "buildDiffSource should return git diff source" {
             // setup
             val compareWith = "develop"
             val diffConfig = DiffSourceConfig { diffBase = compareWith }
 
             // run
-            val diffSource = diffSourceFactory(File("."), diffConfig)
+            val diffSource = DiffSource.buildDiffSource(File("."), diffConfig)
 
             // assert
             diffSource.shouldBeTypeOf<GitDiffSource>()
             diffSource.sourceDescription shouldBe "Git: diff $compareWith"
         }
 
-        "diffSourceFactory should throw when no source specified" {
+        "buildDiffSource should throw when no source specified" {
             // setup
             val diffConfig = mockk<DiffSourceConfig> {
                 every { file } returns ""
@@ -62,7 +62,7 @@ class DiffSourceFactoryTest : StringSpec() {
             }
             // run
             val exception = shouldThrow<IllegalStateException> {
-                diffSourceFactory(File("."), diffConfig)
+                DiffSource.buildDiffSource(File("."), diffConfig)
             }
 
             // assert

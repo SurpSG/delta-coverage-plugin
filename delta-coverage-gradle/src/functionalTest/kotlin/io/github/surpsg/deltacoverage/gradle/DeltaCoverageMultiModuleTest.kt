@@ -46,7 +46,9 @@ class DeltaCoverageMultiModuleTest {
                     html.set(true)
                     baseReportDir.set('$baseReportDir')
                 }
-                violationRules.failIfCoverageLessThan 0.9
+                defaultReportView {
+                    violationRules.failIfCoverageLessThan 0.9
+                }
             }
         """.trimIndent()
         )
@@ -56,8 +58,7 @@ class DeltaCoverageMultiModuleTest {
             .runDeltaCoverageTaskAndFail()
             .assertOutputContainsStrings(
                 "Fail on violations: true. Found violations: 1.",
-                "Rule violated for bundle ${TestProjects.MULTI_MODULE}: " +
-                        "branches covered ratio is 0.5, but expected minimum is 0.9"
+                "Rule violated for bundle default: branches covered ratio is 0.5, but expected minimum is 0.9"
             )
 
         // and assert
@@ -99,7 +100,9 @@ class DeltaCoverageMultiModuleTest {
                         autoApplyPlugin.set(false)
                     }
                     diffSource.file.set('$diffFilePath')
-                    violationRules.failIfCoverageLessThan 0.7
+                    defaultReportView {
+                        violationRules.failIfCoverageLessThan 0.7
+                    }
                 }
             """.trimIndent()
         )

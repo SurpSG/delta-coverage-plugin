@@ -50,9 +50,13 @@ class KoverMultiModuleTest {
                     html.set(true)
                     baseReportDir.set("$baseReportDir")
                 }
-                violationRules {
-                    failIfCoverageLessThan(0.9)
-                    failOnViolation.set(false)
+                reportViews {
+                    val default by getting {
+                        violationRules {
+                            failIfCoverageLessThan(0.9)
+                            failOnViolation.set(false)
+                        }
+                    }
                 }
             }
         """.trimIndent()

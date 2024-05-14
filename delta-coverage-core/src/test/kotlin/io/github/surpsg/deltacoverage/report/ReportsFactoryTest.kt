@@ -3,21 +3,20 @@ package io.github.surpsg.deltacoverage.report
 import io.github.surpsg.deltacoverage.config.CoverageEntity
 import io.github.surpsg.deltacoverage.config.CoverageRulesConfig
 import io.github.surpsg.deltacoverage.config.DeltaCoverageConfig
-import io.github.surpsg.deltacoverage.config.DiffSourceConfig
 import io.github.surpsg.deltacoverage.config.ViolationRule
-import io.github.surpsg.deltacoverage.diff.DiffSource
 import io.github.surpsg.deltacoverage.report.jacoco.reportFactory
 import io.kotest.assertions.assertSoftly
 import io.kotest.matchers.collections.shouldBeEmpty
 import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.comparables.shouldBeEqualComparingTo
 import io.kotest.matchers.types.shouldBeInstanceOf
+import io.mockk.every
+import io.mockk.mockk
 import org.jacoco.core.analysis.ICoverageNode.CounterEntity
 import org.jacoco.report.check.Limit
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.CsvSource
 import org.junit.jupiter.params.provider.EnumSource
-import java.io.File
 
 class ReportsFactoryTest {
 
@@ -34,7 +33,7 @@ class ReportsFactoryTest {
     ) {
         // GIVEN
         val deltaCoverageConfig: DeltaCoverageConfig = buildDeltaCoverageConfig(entity, minCoverage)
-        val reportContext = ReportContext(StubDiffSource(), deltaCoverageConfig)
+        val reportContext = ReportContext(deltaCoverageConfig)
 
         // WHEN
         val actualReports: Set<FullReport> = reportFactory(reportContext)
@@ -54,7 +53,7 @@ class ReportsFactoryTest {
     ) {
         // GIVEN
         val deltaCoverageConfig: DeltaCoverageConfig = buildDeltaCoverageConfig(entity, 0.0)
-        val reportContext = ReportContext(StubDiffSource(), deltaCoverageConfig)
+        val reportContext = ReportContext(deltaCoverageConfig)
 
         // WHEN
         val actualReports: Set<FullReport> = reportFactory(reportContext)
@@ -86,7 +85,9 @@ class ReportsFactoryTest {
         minCoverage: Double
     ): DeltaCoverageConfig {
         return DeltaCoverageConfig {
-            diffSourceConfig = DiffSourceConfig { file = "any" }
+            diffSource = mockk {
+                every { pullDiff() } returns emptyList()
+            }
             coverageRulesConfig = CoverageRulesConfig {
                 violationRules += ViolationRule {
                     coverageEntity = entity
@@ -94,12 +95,5 @@ class ReportsFactoryTest {
                 }
             }
         }
-    }
-
-    class StubDiffSource : DiffSource {
-
-        override val sourceDescription: String = ""
-        override fun pullDiff(): List<String> = emptyList()
-        override fun saveDiffTo(dir: File): File = File("")
     }
 }

@@ -46,9 +46,9 @@ class DeltaCoverageExcludesTest {
             deltaCoverageReport {
                 diffSource.file.set('$diffFilePath')
                
-                violationRules {
-                    failIfCoverageLessThan 1.0
-                }
+               defaultReportView {
+                    violationRules.failIfCoverageLessThan 1.0
+               }
                 
                 excludeClasses.value([
                     '**/CoveredClass${dollarSign}UncoveredNestedClass.*',
@@ -89,9 +89,9 @@ class DeltaCoverageExcludesTest {
             deltaCoverageReport {
                 diffSource.file.set('$diffFilePath')
                
-                violationRules {
-                    failIfCoverageLessThan 1.0
-                }
+                defaultReportView {
+                    violationRules.failIfCoverageLessThan 1.0
+               }
                 
                 excludeClasses.value([])
             }

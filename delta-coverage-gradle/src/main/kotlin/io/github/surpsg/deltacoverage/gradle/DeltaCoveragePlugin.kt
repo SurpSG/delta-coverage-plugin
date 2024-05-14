@@ -20,6 +20,9 @@ open class DeltaCoveragePlugin : Plugin<Project> {
             DeltaCoverageConfiguration::class.java,
             project.objects
         )
+        project.extensions.configure(DeltaCoverageConfiguration::class.java) {
+            it.reportViews.maybeCreate(DEFAULT_VIEW_NAME)
+        }
 
         CoverageEngineAutoApply().apply(project, deltaCoverageConfig)
 
@@ -72,24 +75,36 @@ open class DeltaCoveragePlugin : Plugin<Project> {
         config: DeltaCoverageConfiguration
     ) = project.gradle.taskGraph.whenReady {
         val contextBuilder = SourcesResolver.Context.Builder.newBuilder(project, project.objects, config)
-        listOf(
+        val defaultView: String = config.reportViews.first().name
+
+        sequenceOf(
             classesFiles to SourceType.CLASSES,
             sourcesFiles to SourceType.SOURCES,
-            coverageBinaryFiles to SourceType.COVERAGE_BINARIES,
         ).forEach { (taskSourceProperty, sourceType) ->
             taskSourceProperty.value(
                 project.provider {
-                    val resolveContext: SourcesResolver.Context = contextBuilder.build(sourceType)
+                    val resolveContext: SourcesResolver.Context = contextBuilder.build(defaultView, sourceType)
                     SourcesResolver().resolve(resolveContext)
                 }
             )
         }
+
+        coverageBinaryFiles.put(
+            defaultView,
+            project.provider {
+                val resolveContext: SourcesResolver.Context =
+                    contextBuilder.build(defaultView, SourceType.COVERAGE_BINARIES)
+                SourcesResolver().resolve(resolveContext)
+            }
+        )
     }
 
     companion object {
         const val DELTA_COVERAGE_REPORT_EXTENSION = "deltaCoverageReport"
         const val DELTA_COVERAGE_TASK = "deltaCoverage"
         const val GIT_DIFF_TASK = "gitDiff"
+
+        const val DEFAULT_VIEW_NAME = "default"
 
         val DELTA_TASK_DEPENDENCIES = setOf(
             JavaPlugin.CLASSES_TASK_NAME,

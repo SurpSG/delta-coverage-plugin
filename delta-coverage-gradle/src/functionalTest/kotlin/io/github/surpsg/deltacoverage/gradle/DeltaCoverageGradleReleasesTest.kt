@@ -33,8 +33,7 @@ class DeltaCoverageGradleReleasesTest {
             "5.6",
             "6.7.1",
             "7.6.4",
-            "8.7",
-            "8.8-rc-1", // the latest release or release candidate
+            "8.8", // the latest release or release candidate
         ]
     )
     fun `deltaCoverage task should be completed successfully on Gradle release`(
@@ -55,5 +54,4 @@ class DeltaCoverageGradleReleasesTest {
             .runDeltaCoverageTask()
             .assertDeltaCoverageStatusEqualsTo(SUCCESS)
     }
-
 }
