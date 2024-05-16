@@ -8,7 +8,7 @@ csvVer = "5.9"
 
 junitVer = "5.10.2"
 mockkVer = "1.13.11"
-kotestVer = "5.5.5"
+kotestVer = "5.9.0"
 jimfsVer = "1.3.0"
 
 deltaCoverageVer = "2.3.0"
