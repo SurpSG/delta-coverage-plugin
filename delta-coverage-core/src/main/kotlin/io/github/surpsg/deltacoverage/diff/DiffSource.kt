@@ -7,11 +7,27 @@ import java.io.File
 
 const val DEFAULT_PATCH_FILE_NAME: String = "diff.patch"
 
-interface DiffSource {
+sealed interface DiffSource {
 
     val sourceDescription: String
+
     fun pullDiff(): List<String>
+
     fun saveDiffTo(dir: File): File
+
+    companion object {
+
+        fun buildDiffSource(
+            projectRoot: File,
+            diffSourceConfig: DiffSourceConfig
+        ): DiffSource = when {
+            diffSourceConfig.file.isNotBlank() -> FileDiffSource(diffSourceConfig.file)
+            diffSourceConfig.url.isNotBlank() -> UrlDiffSource(diffSourceConfig.url)
+            diffSourceConfig.diffBase.isNotBlank() -> GitDiffSource(projectRoot, diffSourceConfig.diffBase)
+
+            else -> error("Expected Git configuration or file or URL diff source but all are blank")
+        }
+    }
 }
 
 internal class FileDiffSource(
@@ -68,15 +84,4 @@ internal class GitDiffSource(
             writeText(diffContent)
         }
     }
-}
-
-internal fun diffSourceFactory(
-    projectRoot: File,
-    diffSourceConfig: DiffSourceConfig
-): DiffSource = when {
-    diffSourceConfig.file.isNotBlank() -> FileDiffSource(diffSourceConfig.file)
-    diffSourceConfig.url.isNotBlank() -> UrlDiffSource(diffSourceConfig.url)
-    diffSourceConfig.diffBase.isNotBlank() -> GitDiffSource(projectRoot, diffSourceConfig.diffBase)
-
-    else -> error("Expected Git configuration or file or URL diff source but all are blank")
 }

@@ -3,21 +3,16 @@ package io.github.surpsg.deltacoverage.report.intellij.report
 import com.intellij.rt.coverage.data.ProjectData
 import com.intellij.rt.coverage.report.Reporter
 import io.github.surpsg.deltacoverage.report.ReportBound
-import io.github.surpsg.deltacoverage.report.ReportType
 import io.mockk.Called
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
-import org.junit.jupiter.params.ParameterizedTest
-import org.junit.jupiter.params.provider.EnumSource
+import org.junit.jupiter.api.Test
 
 class ConsoleReportBuilderTest {
 
-    @ParameterizedTest
-    @EnumSource(value = ReportType::class, names = ["CONSOLE", "MARKDOWN"])
-    fun `should not generate report if report bound is not delta coverage`(
-        reportType: ReportType,
-    ) {
+    @Test
+    fun `should not generate report if report bound is not delta coverage`() {
         // GIVEN
         val reporter = mockk<Reporter>()
         val builder = ConsoleReportBuilder(
@@ -32,11 +27,8 @@ class ConsoleReportBuilderTest {
         verify { reporter wasNot Called }
     }
 
-    @ParameterizedTest
-    @EnumSource(value = ReportType::class, names = ["CONSOLE", "MARKDOWN"])
-    fun `should generate report if report bound is delta coverage`(
-        reportType: ReportType,
-    ) {
+    @Test
+    fun `should generate report if report bound is delta coverage`() {
         // GIVEN
         val reporter = mockk<Reporter> {
             every { projectData } returns ProjectData()

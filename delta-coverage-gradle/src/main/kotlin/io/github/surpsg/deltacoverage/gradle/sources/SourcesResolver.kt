@@ -14,10 +14,7 @@ internal class SourcesResolver {
 
     fun resolve(context: Context): FileCollection {
         val sourceType: SourceType = context.sourceType
-        val deltaPluginConfiguredSource: FileCollection? = getDeltaPluginConfiguredSource(
-            context.sourceType,
-            context.config
-        )
+        val deltaPluginConfiguredSource: FileCollection? = getDeltaPluginConfiguredSource(context)
 
         val (provider, resolvedSources) = if (deltaPluginConfiguredSource == null) {
             log.debug(
@@ -66,17 +63,17 @@ internal class SourcesResolver {
     }
 
     private fun getDeltaPluginConfiguredSource(
-        sourceType: SourceType,
-        deltaCoverageConfiguration: DeltaCoverageConfiguration
+        context: Context,
     ): FileCollection? {
-        return when (sourceType) {
-            SourceType.CLASSES -> deltaCoverageConfiguration.classesDirs
-            SourceType.SOURCES -> deltaCoverageConfiguration.srcDirs
-            SourceType.COVERAGE_BINARIES -> deltaCoverageConfiguration.coverageBinaryFiles
+        return when (context.sourceType) {
+            SourceType.SOURCES -> null
+            SourceType.CLASSES -> context.config.classesDirs
+            SourceType.COVERAGE_BINARIES -> context.config.reportViews.getAt(context.viewName).coverageBinaryFiles
         }
     }
 
     class Context private constructor(
+        val viewName: String,
         val sourcesAutoLookup: SourcesAutoLookup,
         val sourceType: SourceType,
         private val builder: Builder,
@@ -95,13 +92,14 @@ internal class SourcesResolver {
         ) {
 
             fun build(
+                viewName: String,
                 sourceType: SourceType
             ): Context {
                 val sourceAutoLookup = SourcesAutoLookup.build(
                     config.coverage.engine.get(),
                     SourcesAutoLookup.Context(project, config, objectFactory)
                 )
-                return Context(sourceAutoLookup, sourceType, this)
+                return Context(viewName, sourceAutoLookup, sourceType, this)
             }
 
             companion object {

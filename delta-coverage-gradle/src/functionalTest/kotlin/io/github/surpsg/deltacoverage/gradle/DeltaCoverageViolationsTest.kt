@@ -51,9 +51,11 @@ class DeltaCoverageViolationsTest {
                 deltaCoverageReport {
                     diffSource.file.set('$diffFilePath')
                     reportConfiguration.baseReportDir.set('$baseReportDir')
-                    violationRules {
-                        failIfCoverageLessThan 1.0
-                        failOnViolation.set(true)
+                    defaultReportView {
+                        violationRules {
+                            failIfCoverageLessThan 1.0
+                            failOnViolation.set(true)
+                        }
                     }
                 }
             """.trimIndent()
@@ -80,16 +82,18 @@ class DeltaCoverageViolationsTest {
                         html.set(true)
                         baseReportDir.set('$absolutePathBaseReportDir')
                     }
-                    violationRules {
-                        failOnViolation.set(true)
-                        rule(io.github.surpsg.deltacoverage.gradle.CoverageEntity.LINE) {
-                            minCoverageRatio.set(0.7d)
-                        }
-                        rule(io.github.surpsg.deltacoverage.gradle.CoverageEntity.INSTRUCTION) {
-                            minCoverageRatio.set(0.8d)
-                        }
-                        rule(io.github.surpsg.deltacoverage.gradle.CoverageEntity.BRANCH) {
-                            minCoverageRatio.set(0.6d)
+                    defaultReportView {
+                        violationRules {
+                            failOnViolation.set(true)
+                            rule(io.github.surpsg.deltacoverage.gradle.CoverageEntity.LINE) {
+                                minCoverageRatio.set(0.7d)
+                            }
+                            rule(io.github.surpsg.deltacoverage.gradle.CoverageEntity.INSTRUCTION) {
+                                minCoverageRatio.set(0.8d)
+                            }
+                            rule(io.github.surpsg.deltacoverage.gradle.CoverageEntity.BRANCH) {
+                                minCoverageRatio.set(0.6d)
+                            }
                         }
                     }
                 }
@@ -122,9 +126,11 @@ class DeltaCoverageViolationsTest {
 
             deltaCoverageReport {
                 diffSource.file.set('$diffFilePath')
-                violationRules {
-                    failIfCoverageLessThan 1.0d
-                    failOnViolation.set(false)
+                defaultReportView {
+                    violationRules {
+                        failIfCoverageLessThan 1.0d
+                        failOnViolation.set(false)
+                    }
                 }
             }
         """.trimIndent()
@@ -158,13 +164,14 @@ class DeltaCoverageViolationsTest {
 
             deltaCoverageReport {
                 diffSource.file.set('$diffFilePath')
-                
-                violationRules {
-                    failOnViolation.set(true)
-                    
-                    rule(io.github.surpsg.deltacoverage.gradle.CoverageEntity.$coverageEntity) {
-                        minCoverageRatio.set(1d)
-                        entityCountThreshold.set($entityCountThreshold)
+                defaultReportView {
+                    violationRules {
+                        failOnViolation.set(true)
+                        
+                        rule(io.github.surpsg.deltacoverage.gradle.CoverageEntity.$coverageEntity) {
+                            minCoverageRatio.set(1d)
+                            entityCountThreshold.set($entityCountThreshold)
+                        }
                     }
                 }
             }
@@ -195,12 +202,14 @@ class DeltaCoverageViolationsTest {
                 deltaCoverageReport {
                     diffSource.file.set('$diffFilePath')
                     
-                    violationRules {
-                        failOnViolation.set(true)
-                        
-                        rule(io.github.surpsg.deltacoverage.gradle.CoverageEntity.${coverageEntity.name}) {
-                            minCoverageRatio.set(1d)
-                            entityCountThreshold.set($entityCountThreshold)
+                    defaultReportView {
+                        violationRules {
+                            failOnViolation.set(true)
+                            
+                            rule(io.github.surpsg.deltacoverage.gradle.CoverageEntity.${coverageEntity.name}) {
+                                minCoverageRatio.set(1d)
+                                entityCountThreshold.set($entityCountThreshold)
+                            }
                         }
                     }
                 }

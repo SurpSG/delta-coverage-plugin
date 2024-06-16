@@ -1,12 +1,16 @@
 package io.github.surpsg.deltacoverage.gradle
 
 import io.github.surpsg.deltacoverage.CoverageEngine
+import io.github.surpsg.deltacoverage.gradle.ReportView.Companion.DEFAULT_VIEW_NAME
 import io.github.surpsg.deltacoverage.gradle.utils.booleanProperty
 import io.github.surpsg.deltacoverage.gradle.utils.doubleProperty
 import io.github.surpsg.deltacoverage.gradle.utils.map
 import io.github.surpsg.deltacoverage.gradle.utils.new
 import io.github.surpsg.deltacoverage.gradle.utils.stringProperty
 import org.gradle.api.Action
+import org.gradle.api.Incubating
+import org.gradle.api.Named
+import org.gradle.api.NamedDomainObjectContainer
 import org.gradle.api.file.FileCollection
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.model.ObjectFactory
@@ -30,15 +34,7 @@ open class DeltaCoverageConfiguration @Inject constructor(
 
     @Optional
     @InputFiles
-    var coverageBinaryFiles: FileCollection? = null
-
-    @Optional
-    @InputFiles
     var classesDirs: FileCollection? = null
-
-    @Optional
-    @InputFiles
-    var srcDirs: FileCollection? = null
 
     @Input
     val excludeClasses: ListProperty<String> = objectFactory
@@ -51,8 +47,12 @@ open class DeltaCoverageConfiguration @Inject constructor(
     @Nested
     val reportConfiguration: ReportsConfiguration = ReportsConfiguration(objectFactory)
 
-    @Nested
-    val violationRules: ViolationRules = objectFactory.new<ViolationRules>()
+    @Incubating
+    @Internal
+    val reportViews: NamedDomainObjectContainer<ReportView> =
+        objectFactory.domainObjectContainer(ReportView::class.java) { name ->
+            objectFactory.newInstance(ReportView::class.java, name, objectFactory)
+        }
 
     fun coverage(action: Action<in Coverage>): Unit = action.execute(coverage)
 
@@ -60,24 +60,51 @@ open class DeltaCoverageConfiguration @Inject constructor(
         action.execute(reportConfiguration)
     }
 
-    fun violationRules(action: Action<in ViolationRules>) {
-        action.execute(violationRules)
-    }
-
     fun diffSource(action: Action<in DiffSourceConfiguration>) {
         action.execute(diffSource)
+    }
+
+    fun defaultReportView(action: Action<in ReportView>) {
+        reportViews.named(DEFAULT_VIEW_NAME, action)
     }
 
     override fun toString(): String {
         return "DeltaCoverageConfiguration(" +
                 "coverageEngine=${coverage.engine.get()}, " +
-                "coverageBinaryFiles=$coverageBinaryFiles, " +
                 "classesDirs=$classesDirs, " +
-                "srcDirs=$srcDirs, " +
                 "excludeClasses=${excludeClasses.get()}, " +
                 "diffSource=$diffSource, " +
-                "reportConfiguration=$reportConfiguration, " +
+                "reportConfiguration=$reportConfiguration)"
+    }
+}
+
+@Incubating
+open class ReportView @Inject constructor(
+    private val name: String,
+    objectFactory: ObjectFactory,
+) : Named {
+
+    @Optional
+    @InputFiles
+    var coverageBinaryFiles: FileCollection? = null
+
+    @Nested
+    val violationRules: ViolationRules = objectFactory.new<ViolationRules>()
+
+    fun violationRules(action: Action<in ViolationRules>) {
+        action.execute(violationRules)
+    }
+
+    override fun toString(): String {
+        return "View(" +
+                "coverageBinaryFiles=$coverageBinaryFiles, " +
                 "violationRules=$violationRules)"
+    }
+
+    override fun getName(): String = name
+
+    companion object {
+        internal const val DEFAULT_VIEW_NAME = "default"
     }
 }
 

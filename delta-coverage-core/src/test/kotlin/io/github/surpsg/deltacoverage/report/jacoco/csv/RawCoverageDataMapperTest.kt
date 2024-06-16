@@ -24,7 +24,6 @@ class RawCoverageDataMapperTest {
 
         // THEN
         rawCoverageData shouldBeEqualToComparingFields  RawCoverageData {
-            group = "group"
             aClass = "aPackage.aClass"
             branchesCovered = 1
             branchesTotal = 3

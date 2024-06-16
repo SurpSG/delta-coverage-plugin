@@ -15,11 +15,10 @@ internal object TextualReportFacade {
 
     private const val NA_VALUE = ""
 
-    private const val SOURCE_H = "Source"
     private const val CLASS_H = "Class"
     private const val LINES_H = "Lines"
     private const val BRANCHES_H = "Branches"
-    private val HEADERS = listOf(SOURCE_H, CLASS_H, LINES_H, BRANCHES_H)
+    private val HEADERS = listOf(CLASS_H, LINES_H, BRANCHES_H)
 
     fun generateReport(
         buildContext: BuildContext,
@@ -47,8 +46,6 @@ internal object TextualReportFacade {
         buildContext: BuildContext,
     ): List<String> = HEADERS.map { header ->
         when (header) {
-            SOURCE_H -> source
-
             LINES_H -> linesRatio.formatToPercentage()
 
             CLASS_H -> aClass.applyIf(buildContext.shrinkLongClassName) {
@@ -68,8 +65,8 @@ internal object TextualReportFacade {
     }
 
     private fun List<RawCoverageData>.computeTotal(): RawCoverageData = fold(
-        RawCoverageData.newBlank { group = "Total" },
-        RawCoverageData::merge
+        RawCoverageData.newBlank { aClass = "Total" },
+        RawCoverageData::merge,
     )
 
     private fun Double.formatToPercentage(): String {

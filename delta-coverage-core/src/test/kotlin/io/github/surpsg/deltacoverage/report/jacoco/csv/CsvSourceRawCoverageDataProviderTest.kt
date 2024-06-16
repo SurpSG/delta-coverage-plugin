@@ -28,7 +28,6 @@ class CsvSourceRawCoverageDataProviderTest {
         assertSoftly(actualData) {
             shouldHaveSize(1)
             first() shouldBeEqualToComparingFields RawCoverageData {
-                group = "group"
                 aClass = "package.class"
 
                 branchesTotal = 7

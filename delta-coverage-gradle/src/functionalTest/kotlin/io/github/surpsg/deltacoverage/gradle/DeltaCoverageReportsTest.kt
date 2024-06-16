@@ -60,11 +60,11 @@ class DeltaCoverageReportsTest {
         gradleRunner
             .runDeltaCoverageTask()
             .assertOutputContainsStrings(
-                "| Delta Coverage Stats                                                  |",
-                "| Source                     | Class                | Lines  | Branches |",
-                "+----------------------------+----------------------+--------+----------+",
-                "| single-module-test-project | com.java.test.Class1 | 66.67% | 50%      |",
-                "| Total                      |                      | 66.67% | 50%      |",
+                "| Delta Coverage Stats                     |",
+                "| Class                | Lines  | Branches |",
+                "+----------------------+--------+----------+",
+                "| com.java.test.Class1 | 66.67% | 50%      |",
+                "| Total                | 66.67% | 50%      |",
             )
             .assertOutputContainsStrings("Fail on violations: false. Found violations: 0")
 

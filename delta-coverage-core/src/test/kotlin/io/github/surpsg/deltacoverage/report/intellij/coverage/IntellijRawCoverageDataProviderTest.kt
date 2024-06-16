@@ -48,7 +48,6 @@ class IntellijRawCoverageDataProviderTest {
         assertSoftly(actualData) {
             size shouldBe 1
             first() shouldBeEqualToComparingFields RawCoverageData {
-                group = sourceName
                 aClass = className
                 branchesTotal = 0
                 branchesCovered = 0

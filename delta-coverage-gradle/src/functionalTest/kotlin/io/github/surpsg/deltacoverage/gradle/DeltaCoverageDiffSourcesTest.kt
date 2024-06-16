@@ -40,10 +40,12 @@ class DeltaCoverageDiffSourcesTest {
             """
             deltaCoverageReport {
                 diffSource.file.set('$diffFilePath')
-                violationRules {
-                    failOnViolation.set(true)
-                    rule(io.github.surpsg.deltacoverage.gradle.CoverageEntity.INSTRUCTION) {
-                        minCoverageRatio.set(1d)
+                defaultReportView {
+                    violationRules {
+                        failOnViolation.set(true)
+                        rule(io.github.surpsg.deltacoverage.gradle.CoverageEntity.INSTRUCTION) {
+                            minCoverageRatio.set(1d)
+                        }
                     }
                 }
             }
@@ -65,11 +67,14 @@ class DeltaCoverageDiffSourcesTest {
             """
             deltaCoverageReport {
                 diffSource.url.set('http://localhost:${MOCK_SERVER_PORT}/')
-                violationRules {
-                    rule(io.github.surpsg.deltacoverage.gradle.CoverageEntity.INSTRUCTION) {
-                        minCoverageRatio.set(1d)
+                
+                defaultReportView {
+                    violationRules {
+                        rule(io.github.surpsg.deltacoverage.gradle.CoverageEntity.INSTRUCTION) {
+                            minCoverageRatio.set(1d)
+                        }
+                        failOnViolation.set(true)
                     }
-                    failOnViolation.set(true)
                 }
             }
             """.trimIndent()
@@ -92,8 +97,9 @@ class DeltaCoverageDiffSourcesTest {
             """
             deltaCoverageReport {
                 diffSource.git.compareWith 'HEAD'
-                
-                violationRules.failIfCoverageLessThan(0.7d)
+                defaultReportView {
+                    violationRules.failIfCoverageLessThan(0.7d)
+                }
             }
             
             """.trimIndent()
@@ -122,7 +128,9 @@ class DeltaCoverageDiffSourcesTest {
                     git.useNativeGit.set(true)
                 }    
                 
-                violationRules.failIfCoverageLessThan(0.8d)
+                defaultReportView {
+                    violationRules.failIfCoverageLessThan(0.8d)
+                }
             }
             
             """.trimIndent()
