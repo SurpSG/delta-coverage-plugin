@@ -20,7 +20,6 @@ internal class IntellijRawCoverageDataProvider(
 
     private fun collectClassCoverageData(classData: ClassData): RawCoverageData {
         val classCoverage = RawCoverageData.newBlank {
-            group = classData.source
             aClass = classData.name
         }
         return classData.mapLinesToMethods().values

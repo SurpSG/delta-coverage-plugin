@@ -32,7 +32,6 @@ class TextualReportFacadeTest {
         fun `generateReport should render report`() {
             val rawCoverageData = listOf(
                 RawCoverageData.newBlank {
-                    group = "group1"
                     aClass = "class1"
                     branchesCovered = 1
                     branchesTotal = 2
@@ -40,7 +39,6 @@ class TextualReportFacadeTest {
                     linesTotal = 4
                 },
                 RawCoverageData.newBlank {
-                    group = "group2"
                     aClass = "class2"
                     branchesCovered = 5
                     branchesTotal = 6
@@ -63,16 +61,16 @@ class TextualReportFacadeTest {
 
             // THEN
             val expectedReport = """
-                +--------+--------+--------+----------+
-                | Delta Coverage Stats                |
-                +--------+--------+--------+----------+
-                | Source | Class  | Lines  | Branches |
-                +--------+--------+--------+----------+
-                | group2 | class2 | 87.50% | 83.33%   |
-                | group1 | class1 | 75%    | 50%      |
-                +--------+--------+--------+----------+
-                | Total  |        | 83.33% | 75%      |
-                +--------+--------+--------+----------+
+                +--------+--------+----------+
+                | Delta Coverage Stats       |
+                +--------+--------+----------+
+                | Class  | Lines  | Branches |
+                +--------+--------+----------+
+                | class2 | 87.50% | 83.33%   |
+                | class1 | 75%    | 50%      |
+                +--------+--------+----------+
+                | Total  | 83.33% | 75%      |
+                +--------+--------+----------+
                 
             """.trimIndent()
             stream.toString() shouldBe expectedReport
@@ -82,7 +80,6 @@ class TextualReportFacadeTest {
         fun `generateReport should render report with NA values`() {
             val rawCoverageData = listOf(
                 RawCoverageData.newBlank {
-                    group = "group1"
                     aClass = "class1"
                     branchesCovered = 0
                     branchesTotal = 0
@@ -105,15 +102,15 @@ class TextualReportFacadeTest {
 
             // THEN
             val expectedReport = """
-                +--------+--------+-------+----------+
-                | Delta Coverage Stats               |
-                +--------+--------+-------+----------+
-                | Source | Class  | Lines | Branches |
-                +--------+--------+-------+----------+
-                | group1 | class1 | NaN%  |          |
-                +--------+--------+-------+----------+
-                | Total  |        | NaN%  |          |
-                +--------+--------+-------+----------+
+                +--------+-------+----------+
+                | Delta Coverage Stats      |
+                +--------+-------+----------+
+                | Class  | Lines | Branches |
+                +--------+-------+----------+
+                | class1 | NaN%  |          |
+                +--------+-------+----------+
+                | Total  | NaN%  |          |
+                +--------+-------+----------+
                 
             """.trimIndent()
             stream.toString() shouldBe expectedReport
@@ -126,7 +123,6 @@ class TextualReportFacadeTest {
             val expectedClass = "..." + seed.repeat(97)
             val rawCoverageData = listOf(
                 RawCoverageData.newBlank {
-                    group = "any"
                     aClass = className
                     linesCovered = 1
                     linesTotal = 2
@@ -158,7 +154,6 @@ class TextualReportFacadeTest {
         fun `generateReport should render report`() {
             val rawCoverageData = listOf(
                 RawCoverageData.newBlank {
-                    group = "group1"
                     aClass = "class1"
                     branchesCovered = 1
                     branchesTotal = 2
@@ -166,7 +161,6 @@ class TextualReportFacadeTest {
                     linesTotal = 4
                 },
                 RawCoverageData.newBlank {
-                    group = "group2"
                     aClass = "class2"
                     branchesCovered = 5
                     branchesTotal = 6
@@ -191,11 +185,11 @@ class TextualReportFacadeTest {
             val expectedReport = """
             # Delta Coverage Stats
             
-            | Source | Class  | Lines  | Branches |
-            |--------|--------|--------|----------|
-            | group2 | class2 | 87.50% | 83.33%   |
-            | group1 | class1 | 75%    | 50%      |
-            | Total  |        | 83.33% | 75%      |
+            | Class  | Lines  | Branches |
+            |--------|--------|----------|
+            | class2 | 87.50% | 83.33%   |
+            | class1 | 75%    | 50%      |
+            | Total  | 83.33% | 75%      |
             
         """.trimIndent()
             stream.toString() shouldBe expectedReport
@@ -205,7 +199,6 @@ class TextualReportFacadeTest {
         fun `generateReport should render report with NA values`() {
             val rawCoverageData = listOf(
                 RawCoverageData.newBlank {
-                    group = "group1"
                     aClass = "class1"
                     branchesCovered = 0
                     branchesTotal = 0
@@ -230,10 +223,10 @@ class TextualReportFacadeTest {
             val expectedReport = """
             # Delta Coverage Stats
             
-            | Source | Class  | Lines | Branches |
-            |--------|--------|-------|----------|
-            | group1 | class1 | NaN%  |          |
-            | Total  |        | NaN%  |          |
+            | Class  | Lines | Branches |
+            |--------|-------|----------|
+            | class1 | NaN%  |          |
+            | Total  | NaN%  |          |
             
         """.trimIndent()
             stream.toString() shouldBe expectedReport
@@ -245,7 +238,6 @@ class TextualReportFacadeTest {
             val className = seed.repeat(123)
             val rawCoverageData = listOf(
                 RawCoverageData.newBlank {
-                    group = "any"
                     aClass = className
                     linesCovered = 1
                     linesTotal = 2

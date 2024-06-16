@@ -67,11 +67,11 @@ class KoverReportsTest {
             .runDeltaCoverageTask()
             .assertOutputContainsStrings("Fail on violations: false. Found violations: 0")
             .assertOutputContainsStrings(
-                "| Delta Coverage Stats                                   |",
-                "| Source      | Class                | Lines  | Branches |",
-                "+-------------+----------------------+--------+----------+",
-                "| Class1.java | com.java.test.Class1 | 66.67% | 75%      |",
-                "| Total       |                      | 66.67% | 75%      |",
+                "| Delta Coverage Stats                     |",
+                "| Class                | Lines  | Branches |",
+                "+----------------------+--------+----------+",
+                "| com.java.test.Class1 | 66.67% | 75%      |",
+                "| Total                | 66.67% | 75%      |",
             )
 
         // AND THEN

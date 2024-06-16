@@ -1,7 +1,6 @@
 package io.github.surpsg.deltacoverage.report.textual
 
 internal class RawCoverageData private constructor(
-    val source: String,
     val aClass: String,
     val branchesCovered: Int,
     val branchesTotal: Int,
@@ -19,7 +18,6 @@ internal class RawCoverageData private constructor(
 
     fun merge(other: RawCoverageData) = this.let { thisData ->
         RawCoverageData {
-            group = thisData.source
             aClass = thisData.aClass
 
             branchesCovered = thisData.branchesCovered + other.branchesCovered
@@ -31,7 +29,6 @@ internal class RawCoverageData private constructor(
     }
 
     internal class Builder {
-        lateinit var group: String
         lateinit var aClass: String
 
         var branchesCovered: Int? = null
@@ -41,7 +38,6 @@ internal class RawCoverageData private constructor(
         var linesTotal: Int? = null
 
         fun build() = RawCoverageData(
-            source = group,
             aClass = aClass,
 
             branchesCovered = requireNotNull(branchesCovered),
@@ -58,9 +54,8 @@ internal class RawCoverageData private constructor(
             Builder().apply(initialize).build()
 
         fun newBlank(
-            customize: Builder.() -> Unit
+            customize: Builder.() -> Unit = {}
         ) = RawCoverageData {
-            group = ""
             aClass = ""
             branchesCovered = 0
             branchesTotal = 0

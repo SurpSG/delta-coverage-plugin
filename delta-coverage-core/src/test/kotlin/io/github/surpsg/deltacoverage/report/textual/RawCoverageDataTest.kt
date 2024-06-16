@@ -56,7 +56,6 @@ class RawCoverageDataTest {
     fun `merge should correctly merge two RawCoverageData instances`() {
         // GIVEN
         val data1 = RawCoverageData {
-            group = "source1"
             aClass = "class1"
             branchesCovered = 5
             branchesTotal = 10
@@ -65,7 +64,6 @@ class RawCoverageDataTest {
         }
 
         val data2 = RawCoverageData {
-            group = "source2"
             aClass = "class2"
             branchesCovered = 5
             branchesTotal = 10
@@ -78,7 +76,6 @@ class RawCoverageDataTest {
 
         // THEN
         mergedData shouldBeEqualToComparingFields RawCoverageData {
-            group = "source1"
             aClass = "class1"
             branchesCovered = 10
             branchesTotal = 20
@@ -106,7 +103,6 @@ class RawCoverageDataTest {
 
         shouldThrow<IllegalArgumentException> {
             RawCoverageData {
-                group = "source"
                 aClass = "class"
                 this.branchesCovered = branchesCovered
                 this.branchesTotal = branchesTotal
