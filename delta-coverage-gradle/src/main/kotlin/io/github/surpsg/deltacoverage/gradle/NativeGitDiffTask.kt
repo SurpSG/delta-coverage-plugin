@@ -31,8 +31,9 @@ abstract class NativeGitDiffTask @Inject constructor(
         val file: File = diffFile.get().asFile
         file.outputStream().use { fileOutputStream ->
             project.exec {
-                it.setCommandLine("git", "diff", "--no-color", "--minimal", targetBranch.get())
+                it.setCommandLine("git", "diff", "--no-color", "--minimal", "${targetBranch.get()}...")
                 it.standardOutput = fileOutputStream
+                it.errorOutput = System.err
             }
 
             println("Diff file generated: file://${file.absolutePath}")
